@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Zenaria Gallery</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <style>
+
+    Scrollbar hidden but scroll still works
+body {
+  font-family: 'Poppins', sans-serif;
+  background-color: #f0f0f0;
+  overflow-y: scroll;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+body::-webkit-scrollbar {
+  display: none;
+}
+
+
+    :root {
+      --primary: #7C3AED;
+      --secondary: #C084FC;
+      --light: #F3E8FF;
+      --bg-light: #F9F9F9;
+      --bg-dark: #1a1a1a;
+      --text-light: #f1f1f1;
+      --text-dark: #222;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: var(--bg-light);
+      color: var(--text-dark);
+      transition: background 0.3s, color 0.3s;
+    }
+
+    body.dark {
+      background: var(--bg-dark);
+      color: var(--text-light);
+    }
+
+    .topbar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      background: inherit;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px 20px;
+      z-index: 100;
+      backdrop-filter: blur(10px);
+    }
+
+    .back-btn {
+      background: none;
+      border: none;
+      font-size: 1.2rem;
+      cursor: pointer;
+      color: var(--primary);
+    }
+
+    .toggle-mode {
+      background: var(--primary);
+      border: none;
+      color: white;
+      padding: 8px 16px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .search-bar,
+    .filter-buttons {
+      position: sticky;
+      top: 60px;
+      background: inherit;
+      z-index: 99;
+    }
+
+    .search-bar {
+      text-align: center;
+      margin: 80px auto 10px;
+      padding: 10px 0;
+    }
+
+    .search-bar input {
+      width: 300px;
+      max-width: 90%;
+      padding: 10px;
+      border-radius: 20px;
+      border: 1px solid #ccc;
+      outline: none;
+    }
+
+    .filter-buttons {
+      text-align: center;
+      margin: 0 auto 10px;
+      padding-bottom: 10px;
+    }
+
+    .filter-buttons button {
+      background: #eee;
+      border: none;
+      padding: 10px 18px;
+      margin: 5px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-weight: 600;
+      color: var(--primary);
+    }
+
+    .filter-buttons button.active,
+    .filter-buttons button:hover {
+      background: var(--primary);
+      color: white;
+    }
+
+    .gallery-grid {
+      column-count: 4;
+      column-gap: 15px;
+      max-width: 1300px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+
+    @media (max-width: 1100px) {
+      .gallery-grid { column-count: 3; }
+    }
+
+    @media (max-width: 800px) {
+      .gallery-grid { column-count: 2; }
+    }
+
+    @media (max-width: 600px) {
+      .gallery-grid { column-count: 1; }
+    }
+
+    .gallery-card {
+      background: white;
+      border-radius: 15px;
+      margin-bottom: 15px;
+      display: inline-block;
+      width: 100%;
+      overflow: hidden;
+      opacity: 0;
+      transform: translateY(20px);
+      animation: fadeIn 0.6s forwards;
+    }
+
+    @keyframes fadeIn {
+      to {
+        opacity: 1;
+        transform: none;
+      }
+    }
+
+    body.dark .gallery-card {
+      background: #2a2a2a;
+    }
+
+    .gallery-card.hide {
+      display: none;
+    }
+
+    .gallery-img img {
+      width: 100%;
+      height: auto;
+      display: block;
+      cursor: pointer;
+    }
+
+    .gallery-info {
+      padding: 15px;
+    }
+
+    .gallery-info h3 {
+      margin: 0 0 8px;
+      font-size: 1.1rem;
+      color: var(--primary);
+    }
+
+    .gallery-info p {
+      font-size: 0.9rem;
+      margin: 0;
+      color: #666;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.9);
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    .modal.show {
+      display: flex;
+    }
+
+    .modal img {
+      max-width: 90%;
+      max-height: 90%;
+      border-radius: 10px;
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 20px;
+      right: 30px;
+      color: white;
+      font-size: 2rem;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <button class="back-btn" onclick="history.back()">
+      <i class="fas fa-arrow-left"></i>
+    </button>
+    <button class="toggle-mode">🌗 Toggle Mode</button>
+  </div>
+
+  <div class="search-bar">
+    <input type="text" id="searchInput" placeholder="Search artworks...">
+  </div>
+
+  <div class="filter-buttons">
+    <button class="active" data-filter="all">All</button>
+    <button data-filter="anime">Anime Style</button>
+    <button data-filter="chibi">Chibi Style</button>
+    <button data-filter="srealistic">Semi Realistic Anime</button>
+  </div>
+
+  <div class="gallery-grid" id="gallery">
+    <!-- Gallery cards will be loaded here -->
+  </div>
+
+  <div class="modal" id="imageModal">
+    <span class="modal-close" id="closeModal">&times;</span>
+    <img src="" alt="Full Image" id="modalImg">
+  </div>
+
+  <script>
+    const cardsData = [
+     
+      //ANIME
+      {src: 'img/anime/Untitled521.png', cat: 'anime'},
+      {src: 'img/anime/Untitled521_20250610211356.png',cat: 'anime'},
+      {src: 'img/anime/Untitled523_20250610202651.png',cat: 'anime'},
+      {src: 'img/anime/82075956-748e-4bf5-b8f4-1cea64e748c7.jpg',cat: 'anime'},
+      {src: 'img/anime/bcb43bcd-33d7-466d-b8ff-8dbcbfa38273.jpg', cat: 'anime'},
+      {src: 'img/anime/Untitled9_20210506211153.png',cat: 'anime'},
+      {src: 'img/anime/Untitled58.png',cat: 'anime'},
+      {src: 'img/anime/Untitled134_20240409112059.png',cat: 'anime'},
+      {src: 'img/anime/Untitled263_20240703111243.png',cat: 'anime'},
+      {src: 'img/anime/Untitled265_20240706210344.png',cat: 'anime'}, 
+      {src: 'img/anime/Untitled529_20250617164647.png',cat: 'anime'},
+      
+
+      //CHIBI
+      {src: 'img/chibi/bcf4ff58-a7ea-40b5-82c3-4e8bf483d553.jpg',cat: 'chibi'},
+      {src: 'img/chibi/Untitled177_20240511203136.png',cat: 'chibi'},
+      {src: 'img/chibi/Untitled184_20240519202856.png',cat: 'chibi'},
+      {src: 'img/chibi/Untitled209_20240602172008.png',cat: 'chibi'},
+      {src: 'img/chibi/Untitled213_20240603231001.png',cat: 'chibi'},
+      {src: 'img/chibi/Untitled286_20240721104205.png',cat: 'chibi'},
+      {src: 'img/chibi/Untitled288_20240725185032.png',cat: 'chibi'},
+      {src: 'img/chibi/Untitled288_20240725185124.png',cat: 'chibi'},
+      {src: 'img/chibi/Untitled288_20240725185200.png',cat: 'chibi'},
+      {src: 'img/chibi/Untitled288_20240725185217.png',cat: 'chibi'},
+      
+
+      //srealistic
+
+      {src: 'img/semi_realistic_anime/cbc69bdf-908f-4f9a-8c75-b484668d95db.jpg',cat: 'srealistic'},
+      {src: 'img/semi_realistic_anime/received_372656622153915.jpeg',cat: 'srealistic'},
+      {src: 'img/semi_realistic_anime/received_862418685572099.jpeg',cat: 'srealistic'},
+      {src: 'img/semi_realistic_anime/received_1437846850100503.jpeg',cat: 'srealistic'},
+      {src: 'img/semi_realistic_anime/ROYALTY_20250509011601.png',cat: 'srealistic'},
+      {src: 'img/semi_realistic_anime/Untitled7.png',cat: 'srealistic'},
+      {src: 'img/semi_realistic_anime/Untitled8.png',cat: 'srealistic'},
+      {src: 'img/semi_realistic_anime/Untitled72_20240222180914.png',cat: 'srealistic'},
+      {src: 'img/semi_realistic_anime/Untitled257_Restored.png',cat: 'srealistic'},
+      {src: 'img/semi_realistic_anime/Untitled275_20240823095354.png',cat: 'srealistic'},
+      {src: 'img/semi_realistic_anime/Untitled440_20250222121000.png',cat: 'srealistic'},
+      {src: 'img/semi_realistic_anime/Untitled469_20250416161519.png',cat: 'srealistic'},
+
+      
+
+
+
+
+    ];
+
+    const gallery = document.getElementById('gallery');
+
+    function createCard(data) {
+      const div = document.createElement('div');
+      div.className = `gallery-card ${data.cat}`;
+      div.innerHTML = `
+        <div class="gallery-img"><img src="${data.src}" alt="${data.title}"></div>
+
+          
+        </div>`;
+      return div;
+    }
+
+    cardsData.forEach(card => gallery.appendChild(createCard(card)));
+
+    document.querySelectorAll('.filter-buttons button').forEach(btn => {
+      btn.onclick = () => {
+        document.querySelectorAll('.filter-buttons button').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const f = btn.dataset.filter;
+        document.querySelectorAll('.gallery-card').forEach(card => {
+          card.classList.toggle('hide', f !== 'all' && !card.classList.contains(f));
+        });
+      };
+    });
+
+    const modeToggle = document.querySelector('.toggle-mode');
+    const currentMode = localStorage.getItem('theme');
+    if (currentMode === 'dark') document.body.classList.add('dark');
+
+    modeToggle.onclick = () => {
+      document.body.classList.toggle('dark');
+      localStorage.setItem('theme', document.body.classList.contains('dark') ? 'dark' : 'light');
+    };
+
+    document.getElementById('searchInput').addEventListener('input', e => {
+      const val = e.target.value.toLowerCase();
+      document.querySelectorAll('.gallery-card').forEach(card => {
+        const text = card.innerText.toLowerCase();
+        card.classList.toggle('hide', !text.includes(val));
+      });
+    });
+
+    const modal = document.getElementById('imageModal');
+    const modalImg = document.getElementById('modalImg');
+    const closeModal = document.getElementById('closeModal');
+    document.addEventListener('click', e => {
+      if (e.target.matches('.gallery-img img')) {
+        modalImg.src = e.target.src;
+        modal.classList.add('show');
+      }
+    });
+    closeModal.onclick = () => modal.classList.remove('show');
+    modal.onclick = e => { if (e.target === modal) modal.classList.remove('show'); };
+  </script>
+</body>
+</html>
